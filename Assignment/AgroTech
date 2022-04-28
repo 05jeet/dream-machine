@@ -1,3 +1,4 @@
+
 # importing necessary packages
 import pandas as pd
 import numpy as np
@@ -8,18 +9,19 @@ sns.set(rc={'figure.figsize' : (11.7,8.27)})
 import os
 os. getcwd()
 df=pd.read_excel("/Users/addynobi/Documents/Essex Jan 22/CE 888 7 SP/Assignment/Data10.xlsx")
+df.shape
 df.nunique()
 df.isnull().sum()
-#checking the df for null values
+df.describe()
+#df.rename( columns={'Plant Date':'Plant_Date'}, inplace=True )
 df
 df.sort_values('Batch Number')
-# preparing for data merge via common column
 df.rename( columns={'Batch Number':'Planting_Batch'}, inplace=True )
 df.info()
 planting=pd.read_excel("/Users/addynobi/Documents/Essex Jan 22/CE 888 7 SP/Assignment/Data10.xlsx", sheet_name='planting')
 planting.nunique()
 planting.info()
-# we found that date is object data type in planting tab and not in DateTime stamp. 
+# we found that date is object data type in planting tab.
 planting['Plant_Date']=pd.to_datetime(planting['Plant_Date'])
 # got out of bounds error
 planting['Plant_Date'] = pd.to_datetime(planting['Plant_Date'], errors = 'coerce')
@@ -99,9 +101,9 @@ data_prep['Density (kg/L)'].fillna(data_prep['Density (kg/L)'].mean(), inplace =
 
 # skewness in these variables could be beacuse of missing values.
 #============================================================
-#Setting dependant and independant variables
+#Set dependant and independant variables
 #Analyize which variables have strong correlation with target variables
-# Encoding Class data type through OneHotEbcoder
+# Encode Class data type 
 import seaborn as sns
 import matplotlib.pyplot as plt
 from sklearn.preprocessing import OneHotEncoder
@@ -109,7 +111,7 @@ from sklearn.preprocessing import OneHotEncoder
 #creating instance of one-hot-encoder
 encoder = OneHotEncoder(handle_unknown='ignore')
 
-#performing one-hot encoding on 'team' column 
+#perform one-hot encoding on 'team' column 
 encoder_data_prep = pd.DataFrame(encoder.fit_transform(data_prep[['Class']]).toarray())
 
 #merge one-hot encoded columns back with original DataFrame
@@ -125,7 +127,7 @@ col1=['Class','Plant Date', 'Check Date','Wind Speed [max]', 'Leaf Wetness [time
 df_reg=final_df.drop(columns=col1, axis=1)
 df_reg.info()
 
-#Performing Multi Output Regression=========================
+#Performing Regression=========================
 y=df_reg[['Head Weight (g)', 'Radial Diameter (mm)', 'Polar Diameter (mm)']]
 X1=df_reg[['Fresh Weight (g)', 'Diameter Ratio', 'Density (kg/L)', 'Leaf Area (cm^2)', 'Square ID', 'Solar Radiation [avg]','Precipitation [sum]', 'Wind Speed [avg]', 'Battery Voltage [last]', 'Air Temperature [avg]', 'Air Temperature [max]', 'Air Temperature [min]', 'Relative Humidity [avg]', 'Dew Point [avg]', 'Dew Point [min]', 'Age' ]]
 X1.isnull().sum()
@@ -143,8 +145,6 @@ X=X1.drop(columns=col2, axis=1)
 #FINAL dataframes for multi output regression=========================
 #dependent variables in df y
 #independant variables in df X
-
-#Linear Regreaaion Model===============================
 from sklearn.linear_model import LinearRegression
 model = LinearRegression()
 # fit model
@@ -155,7 +155,6 @@ yhat = model.predict([row])
 # summarize prediction
 print(yhat[0])
 # we are getting predicted values quite away from actual
-
 #KNN Model==========================================
 from sklearn.neighbors import KNeighborsRegressor
 model = KNeighborsRegressor()
@@ -201,4 +200,27 @@ n_scores = absolute(n_scores)
 # summarize performance
 print('MAE: %.3f (%.3f)' % (mean(n_scores), std(n_scores)))
 
-#Thank You==============================================
+from sklearn.datasets import make_regression
+from sklearn.multioutput import MultiOutputRegressor
+from sklearn.svm import SVR
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import mean_squared_error, mean_absolute_error
+
+# SVMRegressor Methodology========================================
+# Train/test split
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.20, random_state=33)
+
+# Create the SVR regressor
+svr = SVR(epsilon=0.2)
+
+# Create the Multioutput Regressor
+mor = MultiOutputRegressor(svr)
+
+# Train the regressor
+mor = mor.fit(X_train, y_train)
+
+# Generate predictions for testing data
+y_pred = mor.predict(X_test)
+
+#SVR model was attempted but the preb=vious models worked better.
+
